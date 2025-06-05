@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Blogging API
+  description: REST API for a blogging application with blogs, comments, and likes.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+
+  /login:
+    post:
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful, returns JWT
+        '401':
+          description: Invalid credentials
+
+  /blogs:
+    get:
+      summary: Get all blogs
+      responses:
+        '200':
+          description: A list of blogs
+    post:
+      summary: Create a new blog
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogCreate'
+      responses:
+        '201':
+          description: Blog created
+
+  /blogs/{id}:
+    get:
+      summary: Get a blog by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Blog data
+    put:
+      summary: Update a blog
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogUpdate'
+      responses:
+        '200':
+          description: Blog updated
+    delete:
+      summary: Delete a blog
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Blog deleted
+
+  /blogs/{blogId}/comments:
+    get:
+      summary: Get comments on a blog
+      parameters:
+        - in: path
+          name: blogId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of comments
+    post:
+      summary: Add a comment to a blog
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: blogId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Comment added
+
+  /comments/{id}:
+    put:
+      summary: Edit a comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentUpdate'
+      responses:
+        '200':
+          description: Comment updated
+    delete:
+      summary: Delete a comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Comment deleted
+
+  /likes:
+    post:
+      summary: Like a blog or comment
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeRequest'
+      responses:
+        '201':
+          description: Liked successfully
+    delete:
+      summary: Unlike a blog or comment
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeRequest'
+      responses:
+        '204':
+          description: Like removed
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRegister:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required: [username, email, password]
+
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    BlogCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+      required: [title, content]
+
+    BlogUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    CommentCreate:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+
+    CommentUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+
+    LikeRequest:
+      type: object
+      properties:
+        target_id:
+          type: integer
+        target_type:
+          type: string
+          enum: [blog, comment]
+      required: [target_id, target_type]
